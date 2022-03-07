@@ -1,5 +1,6 @@
 from tkinter import *
 from gui import main_window
+from util import api_utils as au
 
 class InfoPanel:
     def __init__(self, root, bg_color):
@@ -17,4 +18,4 @@ class InfoPanel:
 
     def supply_body_info(self, body_data):
         self.text.set(f"Name: {body_data[0]}\nClosest approach: {body_data[3]}")
-        print(body_data)
+        print(au.format_json(body_data))

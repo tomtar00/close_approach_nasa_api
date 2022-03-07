@@ -1,6 +1,9 @@
+import os
+import sys
 from tkinter import *
+import traceback
 from gui import main_window
-from util import api_utils as ut
+from util import api_utils as au
 from functools import partial
 
 class BodiesList:
@@ -10,24 +13,29 @@ class BodiesList:
         self.frame = Frame(bg_frame, bg=bg_color, borderwidth=10)
         self.frame.place(relwidth=1, relheight=1)
 
-        # Uncomment this line to get data from nasa api...
-        # bodies_json = self.download_bodies('https://ssd-api.jpl.nasa.gov/cad.api')
+        try:
+            # Read data from NASA API
+            #bodies_json = au.get_json_from_url('https://ssd-api.jpl.nasa.gov/cad.api')
 
-        # ... and comment this lines
-        bodies_json = {
-            'data': [
-                ['Body 1', '', '', 'Yesterday'],
-                ['Body 2', '', '', 'Today'],
-                ['Body 3', '', '', 'Tomorrow']
-            ]
-        }
+            # Local data (for testing)
+            bodies_json = {
+                'data': [
+                    ['Body 1', '', '', 'Yesterday'],
+                    ['Body 2', '', '', 'Today'],
+                    ['Body 3', '', '', 'Tomorrow']
+                ]
+            }
 
-        # USE LOCAL DATA FOR TESTING!
-    
-        self.supply_list(bodies_json, supply_info_func)
+            self.supply_list(bodies_json, supply_info_func)
 
-    def download_bodies(self, url):
-        return ut.get_json_from_url(url)
+        except Exception as e:
+            print('------------------------------------')
+            print('Failed to download bodies list')
+            exc_type, _, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(f'{exc_type} in file: {fname} at line: {exc_tb.tb_lineno}')
+            print('Reason: ', e)
+            print('------------------------------------')
 
     def supply_list(self, data, click_func):
         for i in range(len(data['data'])):
