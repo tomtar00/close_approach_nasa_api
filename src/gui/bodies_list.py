@@ -1,7 +1,6 @@
 import os
 import sys
 from tkinter import *
-import traceback
 from gui import main_window
 from util import api_utils as au
 from functools import partial
