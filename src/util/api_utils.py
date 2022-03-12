@@ -1,6 +1,5 @@
 import json
 import requests
-from urllib.request import urlopen
 import urllib.parse
 
 def get_json_from_url(url):
