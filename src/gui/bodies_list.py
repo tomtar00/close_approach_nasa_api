@@ -15,6 +15,12 @@ class BodiesList:
         self.frame.place(relwidth=1, relheight=1)
         self.supply_func = supply_info_func
         self.bodies_btn = []
+
+        self.alertText = StringVar()
+        self.loading_label = Label(
+            self.frame, textvariable=self.alertText, bg=main_window.panels_color, fg='white')
+        self.loading_label.pack_forget()
+
         self.focus_bodies = {
             'Mercury': 'Merc',
             'Venus': 'Venus',
@@ -24,21 +30,25 @@ class BodiesList:
             'Saturn': 'Satrn',
             'Neptune': 'Neptn',
             'Pluto': 'Pluto',
-            'Moon': 'Moon'
+            'Moon': 'Moon',
+            'ALL': 'ALL'
         }
 
         focus_bodies_keys = list(self.focus_bodies.keys())
         self.focus_name = StringVar(self.frame)
         self.focus_name.set(focus_bodies_keys[2])  # default value
 
+        focus_frame = Frame(self.frame, bg=main_window.panels_color)
+        focus_frame.pack(fill=X, pady=(0, 15))
+
         focus_options = OptionMenu(
-            self.frame, self.focus_name, *focus_bodies_keys)
-        focus_options.pack()
+            focus_frame, self.focus_name, *focus_bodies_keys)
+        focus_options.pack(side=RIGHT, fill=Y)
 
         self.option_value = self.focus_bodies.get(self.focus_name.get())
-        button = Button(self.frame, text="OK",
-                        command=self.handle_change_focus)
-        button.pack()
+        button = Button(focus_frame, text="OK",
+                        command=self.handle_change_focus, width=7)
+        button.pack(side=RIGHT, fill=Y,padx=5)
 
         self.update_list(self.option_value)
 
@@ -60,21 +70,24 @@ class BodiesList:
         # download data for given focused body and supply list of buttons
 
         try:
-
+            self.alertText.set('Loading...')
             print(f'downloading data of {focus_body_name}\'s close bodies...')
             self.bodies_json = au.get_json_from_url(
                 f'https://ssd-api.jpl.nasa.gov/cad.api?body={focus_body_name}&limit=5')
-            print('data downloaded successfuly')
-            self.loading_label.destroy()
-            self.supply_list(self.bodies_json, self.supply_func)
+            self.supply_list(self.bodies_json, self.supply_func)   
 
         except Exception as e:
 
+            self.alertText.set('No results')
             print('<------------------------------------')
             print(f'Failed to download bodies list for {focus_body_name}')
             sys.print_traceback()
             print('Reason: ', e)
             print('------------------------------------>')
+
+        else:
+            print('data downloaded successfuly') 
+            self.loading_label.pack_forget()  
 
     def update_list(self, focus_body_name):
         # destroy previous buttons and start downloading data on other thread
@@ -85,21 +98,19 @@ class BodiesList:
 
         # Read data from NASA API
         # ########################
-        # self.loading_label = Label(
-        #     self.frame, text='Loading...', bg=main_window.bg_color, fg='white')
-        # self.loading_label.pack()
-        # executor = ThreadPoolExecutor(max_workers=1)
-        # executor.submit(self.request_bodies_data, focus_body_name)
+        self.loading_label.pack()
+        executor = ThreadPoolExecutor(max_workers=1)
+        executor.submit(self.request_bodies_data, focus_body_name)
         # ########################
 
         # Local data (for testing)
         # ########################
-        self.bodies_json = {
-            'data': [
-                ['Body 1', '', '', 'Yesterday'],
-                ['Body 2', '', '', 'Today'],
-                ['Body 3', '', '', 'Tomorrow']
-            ]
-        }
-        self.supply_list(self.bodies_json, self.supply_func)
+        # self.bodies_json = {
+        #     'data': [
+        #         ['Body 1', '', '', 'Yesterday'],
+        #         ['Body 2', '', '', 'Today'],
+        #         ['Body 3', '', '', 'Tomorrow']
+        #     ]
+        # }
+        # self.supply_list(self.bodies_json, self.supply_func)
         # ########################
