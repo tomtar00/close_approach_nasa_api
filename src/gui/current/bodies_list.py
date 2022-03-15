@@ -6,14 +6,63 @@ from util import api_utils as au
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 
+focus_bodies = {
+            'Mercury': {
+                'nasa_key': 'Merc',
+                'open_key': 'mercure',
+                'color': '#99781f'
+            },
+            'Venus': {
+                'nasa_key': 'Venus',
+                'open_key': 'venus',
+                'color': 'orange'
+            },
+            'Earth': {
+                'nasa_key': 'Earth',
+                'open_key': 'terre',
+                'color': 'blue'
+            },
+            'Mars': {
+                'nasa_key': 'Mars',
+                'open_key': 'mars',
+                'color': 'red'
+            },
+            'Jupiter': {
+                'nasa_key': 'Juptr',
+                'open_key': 'jupiter',
+                'color': 'brown'
+            },
+            'Saturn': {
+                'nasa_key': 'Satrn',
+                'open_key': 'saturn',
+                'color': 'orange'
+            },
+            'Neptune': {
+                'nasa_key': 'Neptn',
+                'open_key': 'neptune',
+                'color': 'blue'
+            },
+            'Pluto': {
+                'nasa_key': 'Pluto',
+                'open_key': 'pluton',
+                'color': 'blue'
+            },
+            'Moon': {
+                'nasa_key': 'Moon',
+                'open_key': 'moon',
+                'color': 'grey'
+            }
+}
+
 
 class BodiesList:
 
-    def __init__(self, root, bg_color, supply_info_func):
+    def __init__(self, root, bg_color, supply_info_func, change_focus_func):
         self.frame = Frame(root, bg=bg_color, borderwidth=10)
         self.frame.pack(expand=True, fill=BOTH)
 
         self.supply_func = supply_info_func
+        self.change_focus = change_focus_func
         self.bodies_btn = []
 
         self.alertText = StringVar()
@@ -21,20 +70,7 @@ class BodiesList:
             self.frame, textvariable=self.alertText, bg=main_window.panels_color, fg='white')
         self.loading_label.pack_forget()
 
-        self.focus_bodies = {
-            'Mercury': 'Merc',
-            'Venus': 'Venus',
-            'Earth': 'Earth',
-            'Mars': 'Mars',
-            'Jupiter': 'Juptr',
-            'Saturn': 'Satrn',
-            'Neptune': 'Neptn',
-            'Pluto': 'Pluto',
-            'Moon': 'Moon',
-            'ALL': 'ALL'
-        }
-
-        focus_bodies_keys = list(self.focus_bodies.keys())
+        focus_bodies_keys = list(focus_bodies.keys())
         self.focus_name = StringVar(self.frame)
         self.focus_name.set(focus_bodies_keys[2])  # default value
 
@@ -51,7 +87,7 @@ class BodiesList:
             focus_frame, textvariable=self.focus_name, values=focus_bodies_keys, state='readonly')
         focus_options.pack(side=RIGHT)
 
-        self.option_value = self.focus_bodies.get(self.focus_name.get())
+        self.option_value = focus_bodies.get(self.focus_name.get())
         button = Button(focus_frame, text="OK",
                         command=self.handle_change_focus, width=7)
         button.pack(side=RIGHT, padx=5)
@@ -59,8 +95,9 @@ class BodiesList:
         self.update_list(self.option_value)
 
     def handle_change_focus(self):
-        self.option_value = self.focus_bodies.get(self.focus_name.get())
-        return self.update_list(self.option_value)
+        self.option_value = focus_bodies.get(self.focus_name.get())
+        self.change_focus(self.focus_name.get())
+        return self.update_list(self.option_value) 
 
     def supply_list(self, data, click_func):
         # create buttons for all objects in data and assing command for each button
@@ -79,7 +116,7 @@ class BodiesList:
             self.alertText.set('Loading...')
             print(f'downloading data of {focus_body_name}\'s close bodies...')
             self.bodies_json = au.get_json_from_url(
-                f'https://ssd-api.jpl.nasa.gov/cad.api?body={focus_body_name}&limit=5')
+                f'https://ssd-api.jpl.nasa.gov/cad.api?body={focus_body_name}&limit=15')
             self.supply_list(self.bodies_json, self.supply_func)
 
         except Exception as e:
