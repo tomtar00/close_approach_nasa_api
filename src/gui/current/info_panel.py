@@ -6,11 +6,14 @@ from util import api_utils as au
 from gui.current import bodies_list as bl
 import pandas as pd
 from util import sys
+from util import mathf
 
 max_scale = 5
 min_scale = .1
 AU = 149597871
 deg2rad = pi / 180.0
+
+orbit_res = 30
 
 
 class InfoPanel:
@@ -114,13 +117,31 @@ class InfoPanel:
             self.bodies_coords.loc[i] = [body_data['Name'], planet_pos[0], planet_pos[1]]
 
             # draw orbit
-            orbit_res = 30
-            for i in range(orbit_res):
-                days_per_point = body_data['FullOrbitDays'] / orbit_res
+            days_per_point = body_data['per'] / orbit_res
+            for i in range(orbit_res):       
                 new_pos = self.body_space_position(body_data, self.today_julian - i * days_per_point)
                 self.draw_line(last_pos, new_pos, clr)
                 last_pos = new_pos
             self.draw_line(last_pos, planet_pos, clr)
+
+        
+        if bl.all_bodies_df is not None:
+            for body_data in bl.all_bodies_df.iloc:
+
+                # draw asteroid/comet
+                body_data = pd.to_numeric(body_data, errors='coerce').round(15)
+                #print(body_data)
+                body_pos = last_pos = self.body_space_position(body_data, self.today_julian)
+                self.draw_body(point=last_pos, radius=3, color='grey')
+
+                # draw orbit
+                days_per_point = body_data['per'] / orbit_res
+                for i in range(orbit_res):
+                    new_pos = self.body_space_position(body_data, self.today_julian - i * days_per_point)
+                    self.draw_line(last_pos, new_pos, 'grey')
+                    last_pos = new_pos
+                    #print(last_pos)
+                self.draw_line(last_pos, body_pos, 'grey')
 
     def draw_body(self, point, radius, color):
         _radius = radius * self.scale
@@ -146,34 +167,43 @@ class InfoPanel:
 
         T = (julian_date - 2451545) / 36525
 
-        a = obj_data['Semi-majorAxis']              # semi-major axis (AU)
-        e = obj_data['Eccentricity']                # eccentricity                         
-        I = obj_data['Inclination']                 # inclination to the ecliptic
-        L = obj_data['MeanLongitude']               # mean longitude
-        W = obj_data['LongitudeOfPerihelion']       # longitude of perihelion       
-        O = obj_data['LongitudeOfTheAscendingNode'] # longitude of the ascending node
+        a = obj_data['a']               # semi-major axis (AU)
+        e = obj_data['e']               # eccentricity                         
+        I = obj_data['i']               # inclination to the ecliptic    
+        O = obj_data['om']              # longitude of the ascending node
+        
 
-        a += obj_data['da'] * T
-        e += obj_data['de'] * T
-        I += obj_data['dI'] * T
-        L += obj_data['dL'] * T
-        W += obj_data['dw'] * T
-        O += obj_data['dN'] * T
+        if 'L' in obj_data:
+            L = obj_data['L']           # mean longitude
+            L += obj_data['L_sigma'] * T
+        if 'W' in obj_data:
+            W = obj_data['W']           # longitude of perihelion   
+            W += obj_data['W_sigma'] * T
 
-        b = obj_data['b']
-        c = obj_data['c']
-        s = obj_data['s']
-        f = obj_data['f']
+        a += obj_data['a_sigma'] * T
+        e += obj_data['e_sigma'] * T
+        I += obj_data['i_sigma'] * T 
+        O += obj_data['om_sigma'] * T
+        O = mathf.modulus_between_values(O, -180, 180)
+
+        # b = obj_data['b']
+        # c = obj_data['c']
+        # s = obj_data['s']
+        # f = obj_data['f']
 
         # argument of perihelion
-        w = W - O
+        if 'w' in obj_data:
+            w = obj_data['w']
+        else:
+            w = W - O
+        w = mathf.modulus_between_values(w, -180, 180)
 
         # mean anomaly
-        M = L - W + b * T**2 + c * cos(deg2rad*f*T) + s * sin(deg2rad*f*T)
-        while M < -180:
-            M += 360
-        while M > 180:
-            M -= 360
+        if 'ma' in obj_data:
+            M = obj_data['ma']
+        else:
+            M = L - W #+ b * T**2 + c * cos(deg2rad*f*T) + s * sin(deg2rad*f*T)
+        M = mathf.modulus_between_values(M, -180, 180)
 
         # eccentric anomaly
         E = M + e * sin(deg2rad*M) * (1.0 + e * cos(deg2rad*M))
@@ -184,6 +214,12 @@ class InfoPanel:
             E += dE
             if (abs(dE) < 1e-6):
                 break
+
+        # if 'ma' in obj_data:
+        #     print('asteroid', [a, e, I, O, w, M, E])
+        # else:
+        #     print(obj_data['Name'], [a, e, I, O, w, M, E])
+
 
         x1 = a * (cos(deg2rad*E) - e)
         y1 = a * sqrt(1 - e**2) * sin(deg2rad*E)
@@ -202,14 +238,12 @@ class InfoPanel:
         return Xecl * 100, Yecl * 100
 
     def change_focus(self, body_name):
-        #df = self.bodies_df[self.bodies_df['Name'] == body_name]
         df = self.bodies_coords[self.bodies_coords['Name'] == body_name]
         self.offset_x = -float(df['x'])
         self.offset_y = -float(df['y'])
         self.draw()
 
-    def supply_body_info(self, body_data):
+    def supply_body_info(self, body_df_row):
         self.text.set(
-            f"Name: {body_data[0]}\nClosest approach: {body_data[3]}")
-        print(au.format_json(body_data))
+            f"Name: {str(body_df_row['des'])}\nClosest approach: {str(body_df_row['cd'])}")
         self.draw()
