@@ -51,8 +51,7 @@ class MainWindow:
         info_frame.pack(side=RIGHT, fill=BOTH, expand=True)
 
         info = info_panel.InfoPanel(info_frame, panels_color)
-        bodies_list.BodiesList(
-            bodies_frame, panels_color, info.supply_body_info, info.change_focus)
+        bodies_list.BodiesList(bodies_frame, panels_color, info)
 
         ##### Statistics
         statistics_frame = Frame(window, bg=bg_color, borderwidth=10)
