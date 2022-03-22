@@ -10,7 +10,7 @@ class DataframeView():
         self.frame = Frame(root, bg=bg_color, borderwidth=10)
         self.frame.pack(expand=True, fill=BOTH)
 
-        wine_df = pd.read_csv ('./gui/current/bodies.csv')
+        wine_df = pd.read_csv ('./gui/current/planets.csv')
         #wine_df.columns = wine_df.feature_names
 
         # pt = Table(self.frame, dataframe=wine_df)

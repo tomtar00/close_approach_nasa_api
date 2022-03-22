@@ -64,6 +64,7 @@ class BodiesList:
     def handle_change_focus(self):
         self.option_value = focus_bodies.get(self.focus_name.get()).get('key')
         self.info_panel.change_focus(self.focus_name.get())
+        self.info_panel.reset_body_info()
         return self.update_list(self.option_value) 
 
     def supply_list_from_web(self, data, click_func):
@@ -137,7 +138,7 @@ class BodiesList:
                 self.alertText.set('Loading...')
                 print(f'downloading data of {focus_body_name}\'s close bodies...')
                 self.bodies_json = au.get_json_from_url(
-                    f'https://ssd-api.jpl.nasa.gov/cad.api?body={focus_body_name}&limit=5')
+                    f'https://ssd-api.jpl.nasa.gov/cad.api?body={focus_body_name}&limit=1')
                 self.supply_list_from_web(self.bodies_json, self.info_panel.supply_body_info)
                 print('data downloaded successfuly')
             else:

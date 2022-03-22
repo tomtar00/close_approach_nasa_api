@@ -26,21 +26,30 @@ class InfoPanel:
         self.frame = Frame(root, bg=bg_color, borderwidth=10)
         self.frame.pack(expand=True, fill=BOTH)
 
-        self.bodies_df = pd.read_csv('./gui/current/bodies.csv')
+        self.bodies_df = pd.read_csv('./gui/current/planets.csv')
         self.target_julian = self.current_julian_date()
-
-        # To create a label, which text may be changed we need to create StringVar object
-        self.text = StringVar()
-        self.text.set("Select close approach body")
 
         # ==== Details
         details_frame = Frame(self.frame, bg=bg_color, height=130)
         details_frame.pack(fill=BOTH, pady=(0, 5))
         details_frame.pack_propagate(0)
 
-        label = Label(details_frame, textvariable=self.text,
-                      background=bg_color, foreground='white')
-        label.pack()
+        self.nameText = StringVar()
+        self.nameText.set("Select close approach body")
+        Label(details_frame, textvariable=self.nameText, font=('Arial', 15, 'bold'),
+                      background=bg_color, foreground='white').pack(pady=(0, 10))
+
+        self.dateText = StringVar()
+        self.dateText.set("")
+        Label(details_frame, textvariable=self.dateText,
+                      background=bg_color, foreground='white')\
+                      .pack(anchor=NW)
+
+        self.distanceText = StringVar()
+        self.distanceText.set("")
+        Label(details_frame, textvariable=self.distanceText,
+                      background=bg_color, foreground='white')\
+                      .pack(anchor=NW)
 
         # ==== Visualization
         self.bodies_coords = pd.DataFrame(columns=['Name', 'x', 'y'])
@@ -90,9 +99,9 @@ class InfoPanel:
                                command=self.reset_date, width=5)
         nextday_btn.pack(padx=5)
         nextday_btn.place(x=130, y=40)
-        self.dateText = StringVar()
-        self.dateText.set(f'{sys.get_gregorian_datetime(self.target_julian)}')
-        date_value = Label(self.visual_canvas, textvariable=self.dateText,
+        self.dateGuiText = StringVar()
+        self.dateGuiText.set(f'{sys.get_gregorian_datetime(self.target_julian)}')
+        date_value = Label(self.visual_canvas, textvariable=self.dateGuiText,
                             background='black', foreground='white')
         date_value.pack(side=LEFT, padx=5)
         date_value.place(x=185, y=43)
@@ -123,19 +132,19 @@ class InfoPanel:
 
     def next_day(self):
         self.target_julian += 1
-        self.dateText.set(f'{sys.get_gregorian_datetime(self.target_julian)}')
+        self.dateGuiText.set(f'{sys.get_gregorian_datetime(self.target_julian)}')
         self.draw()
         self.change_focus(self.focus_planet_name)
 
     def previous_day(self):
         self.target_julian -= 1
-        self.dateText.set(f'{sys.get_gregorian_datetime(self.target_julian)}')
+        self.dateGuiText.set(f'{sys.get_gregorian_datetime(self.target_julian)}')
         self.draw()
         self.change_focus(self.focus_planet_name)
 
     def reset_date(self):
         self.target_julian = self.current_julian_date()
-        self.dateText.set(f'{sys.get_gregorian_datetime(self.target_julian)}')
+        self.dateGuiText.set(f'{sys.get_gregorian_datetime(self.target_julian)}')
         self.draw()
         self.change_focus(self.focus_planet_name)
 
@@ -336,9 +345,19 @@ class InfoPanel:
             self.draw()
 
     def supply_body_info(self, body_df_row):
+        body_df_row = body_df_row.astype(str)
         self.focus_body_name = str(body_df_row['des'])
-        self.text.set(
-            f"Name: {str(body_df_row['des'])}\
-            \nClosest approach: {str(body_df_row['cd'])}\
-            \nDistance: {str(float(body_df_row['dist']) * AU / 1000000)} mln km")
+
+        dst_km = round((float(body_df_row['dist']) * AU / 1000000), 4)
+        dst_au = round((float(body_df_row['dist'])), 4)
+
+        self.nameText.set(f"{body_df_row['des']}")
+        self.dateText.set(f"{'Closest approach date:':<50} {body_df_row['cd']} ({body_df_row['jd']})")
+        self.distanceText.set(f"{'Closest approach distance:':<50} {dst_km} mln km ({dst_au} AU)")
         self.draw()
+
+    def reset_body_info(self):
+        self.focus_body_name = ''
+        self.nameText.set('Select close approach body')
+        self.dateText.set("")
+        self.distanceText.set("")
