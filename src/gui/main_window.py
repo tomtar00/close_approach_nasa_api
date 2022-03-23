@@ -1,4 +1,3 @@
-from cmath import inf
 from tkinter import *
 from tkinter import ttk
 from gui.current import info_panel
@@ -8,7 +7,6 @@ from gui.statistics import dataframe_view, stat_summary, stat_query
 bg_color = '#23272A'
 panels_color = '#2C2F33'
 accent_color = '#99AAB5'
-
 
 class MainWindow:
 
@@ -60,16 +58,18 @@ class MainWindow:
                               borderwidth=10, width=300)
         left_frame.pack(side=LEFT, fill=BOTH)
         left_frame.pack_propagate(0)
-        query_frame = Frame(left_frame, bg=bg_color)
-        query_frame.pack(fill=BOTH, expand=True, pady=(0, 5))
+        query_frame = Frame(left_frame, bg=bg_color, height=220)
+        query_frame.pack(fill=BOTH, pady=(0, 5))
+        query_frame.pack_propagate(0)
         summary_frame = Frame(left_frame, bg=bg_color)
         summary_frame.pack(fill=BOTH, expand=True, pady=(5, 0))
         dataframe_frame = Frame(statistics_frame, bg=bg_color, borderwidth=10)
         dataframe_frame.pack(side=RIGHT, fill=BOTH, expand=True)
 
-        stat_query.StatQuery(query_frame, panels_color)
-        stat_summary.StatSummary(summary_frame, panels_color)
-        dataframe_view.DataframeView(dataframe_frame, panels_color)
+        query = stat_query.StatQuery(query_frame, panels_color)
+        summary = stat_summary.StatSummary(summary_frame, panels_color, query)
+        df_view = dataframe_view.DataframeView(dataframe_frame, panels_color, query)
+        query.set_view_summary(df_view, summary)
 
         ##### Predictions
         predictions_frame = Frame(window, bg=bg_color, borderwidth=10)

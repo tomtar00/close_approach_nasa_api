@@ -39,17 +39,27 @@ class InfoPanel:
         Label(details_frame, textvariable=self.nameText, font=('Arial', 15, 'bold'),
                       background=bg_color, foreground='white').pack(pady=(0, 10))
 
+        self.details = Frame(details_frame, bg=bg_color)
+        self.details.pack_forget()
+
         self.dateText = StringVar()
         self.dateText.set("")
-        Label(details_frame, textvariable=self.dateText,
+        Label(self.details, text='Closest approach date:',
+                      background=bg_color, foreground='white', width=30, anchor=NW)\
+                      .grid(row=0, column=0, sticky=NW)
+        Label(self.details, textvariable=self.dateText,
                       background=bg_color, foreground='white')\
-                      .pack(anchor=NW)
+                      .grid(row=0, column=1, sticky=NW)
+        Button(self.details, text='Show', command=self.handle_show_date).grid(row=0, column=1, sticky=NE)
 
         self.distanceText = StringVar()
         self.distanceText.set("")
-        Label(details_frame, textvariable=self.distanceText,
+        Label(self.details, text='Closest approach distance:',
+                      background=bg_color, foreground='white', width=30, anchor=NW)\
+                      .grid(row=1, column=0, sticky=NW)
+        Label(self.details, textvariable=self.distanceText,
                       background=bg_color, foreground='white')\
-                      .pack(anchor=NW)
+                      .grid(row=1, column=1, sticky=NW)
 
         # ==== Visualization
         self.bodies_coords = pd.DataFrame(columns=['Name', 'x', 'y'])
@@ -143,10 +153,18 @@ class InfoPanel:
         self.change_focus(self.focus_planet_name)
 
     def reset_date(self):
-        self.target_julian = self.current_julian_date()
+        self.set_date(self.current_julian_date())
+    
+    def set_date(self, julian_date):
+        self.target_julian = julian_date
         self.dateGuiText.set(f'{sys.get_gregorian_datetime(self.target_julian)}')
         self.draw()
         self.change_focus(self.focus_planet_name)
+
+    def handle_show_date(self):
+        df = bl.all_bodies_df[bl.all_bodies_df['des'] == self.focus_body_name]
+        date = float(df['jd'])
+        self.set_date(date)
 
     def current_julian_date(self):
         return sys.get_julian_datetime(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
@@ -178,13 +196,15 @@ class InfoPanel:
             clr = body_data['Color']
 
             # draw planet
-            planet_pos = last_pos = self.planet_space_position(body_data, self.target_julian)
+            planet_pos = self.planet_space_position(body_data, self.target_julian)
             self.draw_body(point=planet_pos, radius=body_data['Radius'] / 1000, color=clr)
             self.bodies_coords.loc[i] = [body_data['Name'], planet_pos[0], planet_pos[1]]
+            last_pos = planet_pos
 
             # draw orbit
-            days_per_point = body_data['per'] / orbit_res
-            for i in range(orbit_res):       
+            res = orbit_res if self.zoom_mode == False else orbit_res * 4
+            days_per_point = body_data['per'] / res
+            for i in range(res):       
                 new_pos = self.planet_space_position(body_data, self.target_julian - i * days_per_point)
                 self.draw_line(last_pos, new_pos, clr)
                 last_pos = new_pos
@@ -207,14 +227,15 @@ class InfoPanel:
 
                 # draw orbit
                 if self.zoom_mode == True or self.focus_body_name == body_name:
-                    first_pos = last_pos = self.body_space_position(body_data, body_mean_anomaly)
-                    bins = linspace(body_mean_anomaly, body_mean_anomaly + 360, orbit_res)
-                    angles = mathf.sigmoid(bins * deg2rad - pi - (body_mean_anomaly * deg2rad), 2) * 360
+                    #first_pos = last_pos = self.body_space_position(body_data, body_mean_anomaly)
+                    last_pos = body_pos
+                    bins = linspace(0, 360, orbit_res) + body_mean_anomaly
+                    angles = mathf.sigmoid(bins * deg2rad - pi - (body_mean_anomaly * deg2rad), 1.75) * 360
                     for i in range(1, orbit_res):
                         new_pos = self.body_space_position(body_data, angles[i] + body_mean_anomaly)
                         self.draw_line(last_pos, new_pos, clr)
                         last_pos = new_pos
-                    self.draw_line(last_pos, first_pos, clr)
+                    self.draw_line(last_pos, body_pos, clr)
 
     def draw_body(self, point, radius, color):
         _radius = radius * (self.scale if self.zoom_mode == False else max_scale_main)
@@ -290,7 +311,7 @@ class InfoPanel:
         Yecl = (cosw*sinO + sinw*cosO*cosI)*x1 + \
             (-sinw*sinO + cosw*cosO*cosI)*y1
 
-        return Xecl * 100, Yecl * 100
+        return (Xecl * 100, Yecl * 100)
 
     def body_space_position(self, obj_data, point_angle=-1):
         # based on https://ssd.jpl.nasa.gov/planets/approx_pos.html
@@ -348,16 +369,17 @@ class InfoPanel:
         body_df_row = body_df_row.astype(str)
         self.focus_body_name = str(body_df_row['des'])
 
+        self.details.pack()
+
         dst_km = round((float(body_df_row['dist']) * AU / 1000000), 4)
         dst_au = round((float(body_df_row['dist'])), 4)
 
         self.nameText.set(f"{body_df_row['des']}")
-        self.dateText.set(f"{'Closest approach date:':<50} {body_df_row['cd']} ({body_df_row['jd']})")
-        self.distanceText.set(f"{'Closest approach distance:':<50} {dst_km} mln km ({dst_au} AU)")
+        self.dateText.set(f"{body_df_row['cd']}")
+        self.distanceText.set(f"{dst_km} mln km ({dst_au} AU)")
         self.draw()
 
     def reset_body_info(self):
         self.focus_body_name = ''
         self.nameText.set('Select close approach body')
-        self.dateText.set("")
-        self.distanceText.set("")
+        self.details.pack_forget()
