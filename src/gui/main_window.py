@@ -3,6 +3,7 @@ from tkinter import ttk
 from gui.current import info_panel
 from gui.current import bodies_list
 from gui.statistics import dataframe_view, stat_summary, stat_query
+from gui.predictions import data_sampler, model_trainer, model_tester
 
 bg_color = '#23272A'
 panels_color = '#2C2F33'
@@ -73,6 +74,23 @@ class MainWindow:
 
         ##### Predictions
         predictions_frame = Frame(window, bg=bg_color, borderwidth=10)
+
+        sampler_frame = Frame(predictions_frame, bg=bg_color,
+                             borderwidth=10, width=300)
+        sampler_frame.pack(side=LEFT, fill=BOTH)
+        sampler_frame.pack_propagate(0)
+
+        right_frame = Frame(predictions_frame, bg=bg_color,
+                              borderwidth=10)
+        right_frame.pack(side=RIGHT, fill=BOTH, expand=True)
+        train_frame = Frame(right_frame, bg=bg_color)
+        train_frame.pack(fill=BOTH, expand=True, pady=(0, 5))
+        test_frame = Frame(right_frame, bg=bg_color)
+        test_frame.pack(fill=BOTH, expand=True, pady=(5, 0))
+
+        sampler = data_sampler.DataSampler(sampler_frame, panels_color)
+        trainer = model_trainer.ModelTrainer(train_frame, panels_color, sampler)
+        tester = model_tester.ModelTester(test_frame, panels_color)
 
         # Add frames to notebook
         notebook.add(current_frame, text='Current')

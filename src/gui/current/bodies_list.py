@@ -44,6 +44,11 @@ class BodiesList:
         focus_frame = Frame(self.frame, bg=main_window.panels_color)
         focus_frame.pack(fill=X, pady=(0, 15))
 
+        self.option_value = focus_bodies.get(self.focus_name.get()).get('key')
+        button = Button(focus_frame, text="OK",
+                        command=self.handle_change_focus, width=5)
+        button.pack(side=RIGHT, padx=5)
+
         style = ttk.Style(self.frame)
         style.theme_use('classic')
         style.configure('TCombobox')
@@ -54,10 +59,7 @@ class BodiesList:
             focus_frame, textvariable=self.focus_name, values=focus_bodies_keys, state='readonly')
         focus_options.pack(side=RIGHT)
 
-        self.option_value = focus_bodies.get(self.focus_name.get()).get('key')
-        button = Button(focus_frame, text="OK",
-                        command=self.handle_change_focus, width=7)
-        button.pack(side=RIGHT, padx=5)
+        Label(focus_frame, text='Planet:', bg=bg_color, fg='white', width=8).pack(side=RIGHT)    
 
         self.update_list(self.option_value)
 
@@ -166,7 +168,7 @@ class BodiesList:
 
         # Read data from NASA API
         # ########################
-        self.loading_label.pack()
-        executor = ThreadPoolExecutor(max_workers=1)
-        executor.submit(self.request_bodies_data, focus_body_name)
+        # self.loading_label.pack()
+        # executor = ThreadPoolExecutor(max_workers=1)
+        # executor.submit(self.request_bodies_data, focus_body_name)
         # ########################

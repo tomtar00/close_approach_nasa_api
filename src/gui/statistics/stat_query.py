@@ -1,16 +1,16 @@
-from concurrent.futures import ThreadPoolExecutor
-import datetime
 from tkinter import *
 from tkinter import ttk
-from numpy import pad
-from tkcalendar import Calendar, DateEntry
+from tkcalendar import DateEntry
 from util import api_utils as au
 from gui.current import bodies_list as bl
+import threading
+from util import sys
 
 class StatQuery():
     def __init__(self, root, bg_color) -> None:
         self.frame = Frame(root, bg=bg_color, borderwidth=10)
         self.frame.pack(expand=True, fill=BOTH)
+        self.t = None
 
         l = Label(self.frame, text='Query', bg=bg_color, fg='white')
         l.pack()
@@ -41,15 +41,27 @@ class StatQuery():
         self.summary = summary
 
     def supply_dataframe(self):
-        min_date = self.min_entry.get_date().strftime('%Y-%m-%d')
-        max_date = self.max_entry.get_date().strftime('%Y-%m-%d')
-        self.df = au.getDataFromApi(min_date, max_date, self.planet_name.get())
-        if self.df is not None:
-            self.df_view.dataframe_to_treeview(self.df)
+        try:
+            min_date = self.min_entry.get_date().strftime('%Y-%m-%d')
+            max_date = self.max_entry.get_date().strftime('%Y-%m-%d')
+            self.df_view.show_loading()
+            self.df = au.getDataFromApi(min_date, max_date, self.planet_name.get())
+            self.summary.handle_data_downloaded()  
+            if self.df is not None:
+                self.df_view.dataframe_to_treeview(self.df)
+            self.t = None
+        except Exception as e:
+            self.df_view.clear_treeview()
+            self.df_view.show_no_result()
+            print('<------------------------------------')
+            print(f'Failed to supply dataframe')
+            sys.print_traceback()
+            #print(traceback.format_exc())
+            print('Reason: ', e)
+            print('------------------------------------>')
 
     def download_data(self):
-        # There's a problem when downloading larger datasets
-        # --- RuntimeError: main thread is not in main loop ---
-        
-        executor = ThreadPoolExecutor(max_workers=1)
-        executor.submit(self.supply_dataframe)
+        if self.t is None:
+            self.t = threading.Thread(target=self.supply_dataframe)
+            self.t.daemon = True
+            self.t.start()
