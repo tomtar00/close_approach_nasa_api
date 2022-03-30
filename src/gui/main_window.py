@@ -90,7 +90,7 @@ class MainWindow:
 
         sampler = data_sampler.DataSampler(sampler_frame, panels_color)
         trainer = model_trainer.ModelTrainer(train_frame, panels_color, sampler)
-        tester = model_tester.ModelTester(test_frame, panels_color)
+        tester = model_tester.ModelTester(test_frame, panels_color, trainer, sampler)
 
         # Add frames to notebook
         notebook.add(current_frame, text='Current')

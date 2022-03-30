@@ -1,5 +1,5 @@
 from tkinter import *
-
+from util import widget_factory as wf
 from sklearn.model_selection import train_test_split
 from util import api_utils as au
 import threading
@@ -36,7 +36,7 @@ class DataSampler():
             int_var = IntVar()
             int_var.set(i)
             self.int_vars.append(int_var)
-            self.create_checkbox(int_var, x, bg_color, i)
+            wf.create_checkbox(self.frame, int_var, x, bg_color, i)
 
         self.alertText = StringVar()
         self.loading_label = Label(
@@ -46,13 +46,6 @@ class DataSampler():
         Button(self.frame, text='Download data',
                command=self.download_data).pack(side=BOTTOM, pady=10)
 
-    def create_checkbox(self, var, label_text, bg, i):
-        Checkbutton(self.frame, text=label_text, variable=var,
-                    width=20, anchor=W, selectcolor=bg, background=bg, fg='white',
-                    activebackground=bg, activeforeground='white',
-                    onvalue=i, offvalue=-1)\
-            .pack(fill=X)
-
     def get_query_params(self):
         on_boxes = list(filter(lambda x: x.get() >= 0, self.int_vars))
         params = []
@@ -61,6 +54,13 @@ class DataSampler():
             params.append(values[var.get()])
         params.append('pha')
         return ','.join(params)
+
+    def get_query_params_indexes(self):
+        on_boxes = list(filter(lambda x: x.get() >= 0, self.int_vars))
+        params_idx = []
+        for var in on_boxes:
+            params_idx.append(var.get())
+        return params_idx
 
     def supply_data(self):
         try:

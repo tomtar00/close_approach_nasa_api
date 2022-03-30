@@ -1,6 +1,5 @@
 from tkinter import *
 from tkinter import ttk
-import traceback
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
@@ -11,9 +10,10 @@ import seaborn as sns
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score
+from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.naive_bayes import CategoricalNB, GaussianNB, MultinomialNB
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn import svm
 from util import api_utils as au
 from util import widget_factory as wf
@@ -27,15 +27,39 @@ class ModelTrainer():
         self.frame.pack(expand=True, fill=BOTH)
         self.sampler = sampler
 
-        Button(self.frame, text='Train', command=self.train_model).pack()
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.columnconfigure((0, 1), weight=1)
 
-        Button(self.frame, text='Correlation', command=self.correlation).pack()
+        self.train_frame = Frame(self.frame, bg=bg_color)
+        self.train_frame.grid(row=0, column=0, sticky=(E, W))
 
-        Button(self.frame, text='Confusion Matrix',
-               command=self.confusion_matrix).pack()
+        self.model_names = ['Logistic Regression',
+                            'Random Forest Classifier', 
+                            'SVM',
+                            'Naive Bayes']
+        self.model_name = StringVar(self.frame)
+        self.model_name.set(self.model_names[1])  # default value
+        style = ttk.Style(self.frame)
+        style.theme_use('classic')
+        style.configure('TCombobox')
+        style.map('TCombobox', fieldbackground=[('readonly', 'white')])
+        style.map('TCombobox', selectbackground=[('readonly', 'white')])
+        style.map('TCombobox', selectforeground=[('readonly', 'black')])
+        model_options = ttk.Combobox(
+            self.train_frame, textvariable=self.model_name, 
+            values=self.model_names, state='readonly', width=30)
+        model_options.pack(pady=10)
+
+        self.noise_var = IntVar()
+        self.noise_var.set(-1)
+        wf.create_checkbox(self.train_frame, self.noise_var,
+                           'Generate noise to reduce imbalance', bg_color, 1, N)
+
+        Button(self.train_frame, text='Train',
+               command=self.train_model, width=10).pack(pady=20)
 
         self.result_frame = Frame(self.frame, bg=bg_color)
-        self.result_frame.pack(expand=True)
+        self.result_frame.grid(row=0, column=1, sticky=(E, W))
         self.accuracyText = StringVar()
         wf.create_info_label(self.result_frame, self.accuracyText,
                              'Accuracy:', bg_color, r=0, label_width=10)
@@ -49,6 +73,26 @@ class ModelTrainer():
         wf.create_info_label(self.result_frame, self.F1_score,
                              'F1 Score:', bg_color, r=3, label_width=10)
 
+        Button(self.result_frame, text='Correlation',
+               command=self.correlation).grid(row=4, column=0, pady=10, padx=5)
+
+        Button(self.result_frame, text='Confusion Matrix',
+               command=self.confusion_matrix).grid(row=4, column=1, pady=10)
+
+    def get_chosen_model(self):
+        chosen_model_name = self.model_name.get()
+
+        if chosen_model_name == self.model_names[0]:
+            return LogisticRegression()
+        elif chosen_model_name == self.model_names[1]:
+            return RandomForestClassifier()
+        elif chosen_model_name == self.model_names[2]:
+            return svm.SVC()
+        elif chosen_model_name == self.model_names[3]:
+            return MultinomialNB()
+        else:
+            raise Exception('Wrong model chosen')
+
     def get_bodies_ml_data(self, _test_size):
         if self.sampler.df is not None:
             self.df_ML = self.sampler.df.copy()
@@ -57,40 +101,43 @@ class ModelTrainer():
             self.df_ML = self.df_ML.apply(
                 lambda x: pd.to_numeric(x, errors='ignore'))
 
-            pha_df = self.df_ML[self.df_ML['pha'] == 1]
-            iters = int(len(self.df_ML.index) / len(pha_df.index)) - 1
+            gen_noise = self.noise_var.get() > 0
+
+            if gen_noise:
+                pha_df = self.df_ML[self.df_ML['pha'] == 1]
+                iters = int(len(self.df_ML.index) / len(pha_df.index)) - 1
 
             y = self.df_ML.iloc[:, -1]
             y = y.astype(int)
-            for i in range(iters):
-                y = pd.concat([y, pha_df.iloc[:, -1]], ignore_index=True)
+            if gen_noise:
+                for _ in range(iters):
+                    y = pd.concat([y, pha_df.iloc[:, -1]], ignore_index=True)
 
             X = self.df_ML.iloc[:, :-1]
             X = X.astype(float)
-            for i in range(iters):
-                noise = np.random.normal(-0.05, 0.05, pha_df.shape)
-                new_pha_df = pha_df.iloc[:, :-1] + noise[:, :-1]
-                X = pd.concat([X, new_pha_df], ignore_index=True)
+            if gen_noise:
+                for _ in range(iters):
+                    noise = np.random.normal(-0.05, 0.05, pha_df.shape)
+                    new_pha_df = pha_df.iloc[:, :-1] + noise[:, :-1]
+                    X = pd.concat([X, new_pha_df], ignore_index=True)
 
             return train_test_split(X, y, test_size=_test_size)
         else:
-            raise Exception('Data needs to firstly downloaded')
+            raise Exception('Data needs to be firstly downloaded')
 
     def train_model(self):
         try:
             self.X_train, self.X_test, self.y_train, self.y_test = self.get_bodies_ml_data(
                 _test_size=.2)
 
-            scaler = StandardScaler().fit(self.X_train)
+            scaler = MinMaxScaler().fit(self.X_train)
             self.X_train = scaler.transform(self.X_train)
             self.X_test = scaler.transform(self.X_test)
 
-            #classifier = LogisticRegression()
-            classifier = RandomForestClassifier()
-            #classifier = svm.LinearSVC()
+            self.classifier = self.get_chosen_model()
 
-            classifier.fit(self.X_train, self.y_train)
-            self.y_pred = classifier.predict(self.X_test)
+            self.classifier.fit(self.X_train, self.y_train)
+            self.y_pred = self.classifier.predict(self.X_test)
 
             # dl_model = Sequential()
             # dl_model.add(Dense(20, activation='relu', input_shape=X_train.shape))
@@ -105,17 +152,19 @@ class ModelTrainer():
             # dl_model_preds = dl_model.predict(X_test)
             # print(classification_report(y_test,dl_model_preds.round()))
 
-            self.accuracyText.set(accuracy_score(self.y_test, self.y_pred))
-            self.precisionText.set(precision_score(
-                self.y_test, self.y_pred, average='macro'))
-            self.recallText.set(recall_score(
-                self.y_test, self.y_pred, average='macro'))
+            def to_prec(x): return f"{round(x*100, 2)} %"
+
+            self.accuracyText.set(
+                to_prec(accuracy_score(self.y_test, self.y_pred)))
+            self.precisionText.set(
+                to_prec(precision_score(self.y_test, self.y_pred, average='macro')))
+            self.recallText.set(
+                to_prec(recall_score(self.y_test, self.y_pred, average='macro')))
             self.F1_score.set(
-                f1_score(self.y_test, self.y_pred, average='macro'))
+                to_prec(f1_score(self.y_test, self.y_pred, average='macro')))
         except Exception as e:
             print(f'Failed to train model. Reason: {e}')
             sys.print_traceback()
-            print(traceback.format_exc())
 
     def correlation(self):
         if self.sampler.df is not None:
@@ -125,10 +174,11 @@ class ModelTrainer():
             plt.show()
 
     def confusion_matrix(self):
-        cm = confusion_matrix(self.y_test, self.y_pred)
-        ax = sns.heatmap(cm, square=True, annot=True, cbar=False, fmt='g')
-        ax.xaxis.set_ticklabels(['non-pha', 'pha'], fontsize=8)
-        ax.yaxis.set_ticklabels(['non-pha', 'pha'], fontsize=8, rotation=0)
-        ax.set_xlabel('Predicted Labels', fontsize=10)
-        ax.set_ylabel('True Labels', fontsize=10)
-        plt.show()
+        if self.sampler.df is not None:
+            cm = confusion_matrix(self.y_test, self.y_pred)
+            ax = sns.heatmap(cm, square=True, annot=True, cbar=False, fmt='g')
+            ax.xaxis.set_ticklabels(['non-pha', 'pha'], fontsize=8)
+            ax.yaxis.set_ticklabels(['non-pha', 'pha'], fontsize=8, rotation=0)
+            ax.set_xlabel('Predicted Labels', fontsize=10)
+            ax.set_ylabel('True Labels', fontsize=10)
+            plt.show()
