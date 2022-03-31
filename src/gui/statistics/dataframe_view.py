@@ -43,7 +43,7 @@ class DataframeView():
         self.tree['columns'] = list(df.columns)
         for column_name in df.columns:
             self.tree.heading(column_name, text=column_name)
-            self.tree.column(column_name, width=150, stretch=NO, anchor=CENTER)
+            self.tree.column(column_name, minwidth=130, width=150, stretch=YES, anchor=CENTER)
         df_rows = df.to_numpy().tolist()
         for row in df_rows:
             self.tree.insert('', END, values=row)

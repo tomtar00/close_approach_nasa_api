@@ -28,7 +28,7 @@ class StatSummary():
     def hexbin(self):
         if hasattr(self.query, 'df'):
             self.query.df.plot.hexbin(
-                x="orbit_id", y="h", gridsize=25, cmap="coolwarm")
+                x="dist", y="h", gridsize=25, cmap="coolwarm")
             plt.show()
         else:
             print('Dataframe is null')

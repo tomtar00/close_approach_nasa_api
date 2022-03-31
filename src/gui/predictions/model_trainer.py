@@ -23,9 +23,12 @@ from util import sys
 
 class ModelTrainer():
     def __init__(self, root, bg_color, sampler) -> None:
+        Label(root, text='Train', font=('Arial', 12, 'bold'),
+              background=bg_color, foreground='white').pack(fill=X)
         self.frame = Frame(root, bg=bg_color, borderwidth=10)
         self.frame.pack(expand=True, fill=BOTH)
         self.sampler = sampler
+        self.t = None
 
         self.frame.rowconfigure(0, weight=1)
         self.frame.columnconfigure((0, 1), weight=1)
@@ -34,29 +37,28 @@ class ModelTrainer():
         self.train_frame.grid(row=0, column=0, sticky=(E, W))
 
         self.model_names = ['Logistic Regression',
-                            'Random Forest Classifier', 
+                            'Random Forest Classifier',
                             'SVM',
                             'Naive Bayes']
         self.model_name = StringVar(self.frame)
         self.model_name.set(self.model_names[1])  # default value
-        style = ttk.Style(self.frame)
-        style.theme_use('classic')
-        style.configure('TCombobox')
-        style.map('TCombobox', fieldbackground=[('readonly', 'white')])
-        style.map('TCombobox', selectbackground=[('readonly', 'white')])
-        style.map('TCombobox', selectforeground=[('readonly', 'black')])
-        model_options = ttk.Combobox(
-            self.train_frame, textvariable=self.model_name, 
-            values=self.model_names, state='readonly', width=30)
-        model_options.pack(pady=10)
+
+        wf.create_info_label_combo(
+            self.train_frame, self.model_name, self.model_names, 'Model', bg_color, r=0)
 
         self.noise_var = IntVar()
         self.noise_var.set(-1)
-        wf.create_checkbox(self.train_frame, self.noise_var,
-                           'Generate noise to reduce imbalance', bg_color, 1, N)
+        wf.create_checkbox_grid(self.train_frame, self.noise_var,
+                                'Generate noise to reduce imbalance', bg_color, 1, 1, W, 2, _pady=(10, 0))
+        self.noise_mag_var = StringVar()
+        self.noise_mag_var.set('0.05')
+        wf.create_info_label_entry(self.train_frame, self.noise_mag_var,
+                                   'Noise magnitude', bg_color, r=2, entry_width=30, _pady=(0, 10))
 
         Button(self.train_frame, text='Train',
-               command=self.train_model, width=10).pack(pady=20)
+               command=self.start_train_thread, width=10).grid(row=3, column=0, pady=20)
+        self.training_label = Label(self.train_frame, text='Training...', bg=bg_color, fg='white')
+        self.training_label.grid_forget()
 
         self.result_frame = Frame(self.frame, bg=bg_color)
         self.result_frame.grid(row=0, column=1, sticky=(E, W))
@@ -73,11 +75,8 @@ class ModelTrainer():
         wf.create_info_label(self.result_frame, self.F1_score,
                              'F1 Score:', bg_color, r=3, label_width=10)
 
-        Button(self.result_frame, text='Correlation',
-               command=self.correlation).grid(row=4, column=0, pady=10, padx=5)
-
         Button(self.result_frame, text='Confusion Matrix',
-               command=self.confusion_matrix).grid(row=4, column=1, pady=10)
+               command=self.confusion_matrix).grid(row=4, column=0, pady=10)
 
     def get_chosen_model(self):
         chosen_model_name = self.model_name.get()
@@ -116,8 +115,10 @@ class ModelTrainer():
             X = self.df_ML.iloc[:, :-1]
             X = X.astype(float)
             if gen_noise:
+                noise_mag = float(self.noise_mag_var.get())
                 for _ in range(iters):
-                    noise = np.random.normal(-0.05, 0.05, pha_df.shape)
+                    noise = np.random.normal(-noise_mag,
+                                             noise_mag, pha_df.shape)
                     new_pha_df = pha_df.iloc[:, :-1] + noise[:, :-1]
                     X = pd.concat([X, new_pha_df], ignore_index=True)
 
@@ -127,6 +128,7 @@ class ModelTrainer():
 
     def train_model(self):
         try:
+            self.training_label.grid(row=3, column=1, pady=20)
             self.X_train, self.X_test, self.y_train, self.y_test = self.get_bodies_ml_data(
                 _test_size=.2)
 
@@ -165,13 +167,15 @@ class ModelTrainer():
         except Exception as e:
             print(f'Failed to train model. Reason: {e}')
             sys.print_traceback()
+        else:
+            self.training_label.grid_forget()
+            self.t = None
 
-    def correlation(self):
-        if self.sampler.df is not None:
-            plt.figure(figsize=(10, 7))
-            corr_matrix = self.df_ML.corr(method='pearson')
-            sns.heatmap(corr_matrix, annot=True)
-            plt.show()
+    def start_train_thread(self):
+        if self.t is None:
+            self.t = threading.Thread(target=self.train_model)
+            self.t.daemon = True
+            self.t.start()
 
     def confusion_matrix(self):
         if self.sampler.df is not None:

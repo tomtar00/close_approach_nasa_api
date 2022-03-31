@@ -1,10 +1,14 @@
 from tkinter import *
+
+from matplotlib import pyplot as plt
 from util import widget_factory as wf
 from sklearn.model_selection import train_test_split
 from util import api_utils as au
 import threading
 from util import sys
 import pandas as pd
+import seaborn as sns
+from util import widget_factory as wf
 
 orbit_elements = {
     'Eccentricity': 'e',
@@ -37,6 +41,11 @@ class DataSampler():
             int_var.set(i)
             self.int_vars.append(int_var)
             wf.create_checkbox(self.frame, int_var, x, bg_color, i)
+
+        opt_frame = Frame(self.frame, bg=bg_color, borderwidth=5)
+        opt_frame.pack(expand=True, fill=BOTH, pady=10)
+        opt_frame.columnconfigure((0, 1), weight=1)
+        wf.create_info_button_stretched(opt_frame, 'Correlation', self.correlation, 'Correlation matrix:', bg_color, 0)
 
         self.alertText = StringVar()
         self.loading_label = Label(
@@ -91,5 +100,17 @@ class DataSampler():
             self.t = threading.Thread(target=self.supply_data)
             self.t.daemon = True
             self.t.start()
+
+    def correlation(self):
+        if self.df is not None:
+            df_ML = self.df.copy()
+            df_ML.replace({'N': 0, 'Y': 1}, inplace=True)
+            df_ML.dropna(inplace=True)
+            df_ML = df_ML.apply(
+                lambda x: pd.to_numeric(x, errors='ignore'))
+            plt.figure(figsize=(10, 7))
+            corr_matrix = df_ML.corr(method='pearson')
+            sns.heatmap(corr_matrix, annot=True)
+            plt.show()
 
 

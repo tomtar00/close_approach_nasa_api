@@ -12,9 +12,6 @@ class StatQuery():
         self.frame.pack(expand=True, fill=BOTH)
         self.t = None
 
-        l = Label(self.frame, text='Query', bg=bg_color, fg='white')
-        l.pack()
-
         Button(self.frame, text='Download data', command=self.download_data).pack(side=BOTTOM, pady=10)
 
         query_frame = Frame(self.frame, bg=bg_color)
