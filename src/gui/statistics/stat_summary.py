@@ -14,6 +14,12 @@ class StatSummary():
         wf.create_info_button_stretched(root=self.frame, btn_label_text='Hexbin',
                                         btn_func=self.hexbin, label_text='Show hexbin:', bg=bg_color, r=0)
 
+        wf.create_info_button_stretched(root=self.frame, btn_label_text='Distances',
+                                        btn_func=self.distancesBox, label_text='Show distances:', bg=bg_color, r=0)
+
+        wf.create_info_button_stretched(root=self.frame, btn_label_text='Velocity',
+                                        btn_func=self.velocityBox, label_text='Show velocities:', bg=bg_color, r=0)
+
         self.testText = StringVar()
         wf.create_info_label_stretched(
             root=self.frame, string_var=self.testText, label_text='Test:', bg=bg_color, r=1)
@@ -29,6 +35,22 @@ class StatSummary():
         if hasattr(self.query, 'df'):
             self.query.df.plot.hexbin(
                 x="dist", y="h", gridsize=25, cmap="coolwarm")
+            plt.show()
+        else:
+            print('Dataframe is null')
+
+    def distancesBox(self):
+        if hasattr(self.query, 'df'):
+            boxPlotData = self.query.df[["dist","dist_min","dist_max"]]
+            boxPlotData.plot.box()
+            plt.show()
+        else:
+            print('Dataframe is null')
+
+    def velocityBox(self):
+        if hasattr(self.query, 'df'):
+            boxPlotData = self.query.df[["v_rel","v_inf"]]
+            boxPlotData.plot.box()
             plt.show()
         else:
             print('Dataframe is null')
