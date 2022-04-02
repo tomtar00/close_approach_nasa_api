@@ -83,7 +83,7 @@ class DataSampler():
                     columns=bodies_json['fields'], data=bodies_json['data'])
             else:
                 print('At least one field parameter must be selected!')
-            self.t = None
+            
             self.loading_label.pack_forget()
         except Exception as e:
             self.loading_label.pack(side=BOTTOM, pady=5)
@@ -94,6 +94,8 @@ class DataSampler():
             #print(traceback.format_exc())
             print('Reason: ', e)
             print('------------------------------------>')
+        
+        self.t = None
 
     def download_data(self):
         if self.t is None:

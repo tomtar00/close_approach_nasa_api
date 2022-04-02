@@ -140,7 +140,7 @@ class BodiesList:
                 self.alertText.set('Loading...')
                 print(f'downloading data of {focus_body_name}\'s close bodies...')
                 self.bodies_json = au.get_json_from_url(
-                    f'https://ssd-api.jpl.nasa.gov/cad.api?body={focus_body_name}&limit=3')
+                    f'https://ssd-api.jpl.nasa.gov/cad.api?body={focus_body_name}&limit=3') # &limit=3
                 self.supply_list_from_web(self.bodies_json, self.info_panel.supply_body_info)
                 print('data downloaded successfuly')
             else:
@@ -168,7 +168,7 @@ class BodiesList:
 
         # Read data from NASA API
         # ########################
-        # self.loading_label.pack()
-        # executor = ThreadPoolExecutor(max_workers=1)
-        # executor.submit(self.request_bodies_data, focus_body_name)
+        self.loading_label.pack()
+        executor = ThreadPoolExecutor(max_workers=1)
+        executor.submit(self.request_bodies_data, focus_body_name)
         # ########################

@@ -38,7 +38,7 @@ def getDataFromApi(date_min, date_max, body):
         df = df[1:]
 
         # changing values into numeric  -- TEMPORARY --
-        df["orbit_id"] = pd.to_numeric(df["orbit_id"])
+        df["orbit_id"] = pd.to_numeric(df["orbit_id"], errors='ignore')
         df["jd"] = pd.to_numeric(df["jd"])
         df["dist"] = pd.to_numeric(df["dist"])
         df["dist_min"] = pd.to_numeric(df["dist_min"])

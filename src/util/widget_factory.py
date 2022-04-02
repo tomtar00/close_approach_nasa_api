@@ -13,22 +13,22 @@ def create_info_label(root, string_var, label_text, bg, r, label_width=30):
         .grid(row=r, column=1, sticky=NW)
 
 
-def create_info_label_stretched(root, string_var, label_text, bg, r):
+def create_info_label_stretched(root, string_var, label_text, bg, r, _pady=0):
     string_var.set('---')
     Label(root, text=label_text,
           background=bg, foreground='white', anchor=W)\
-        .grid(row=r, column=0, sticky=EW)
+        .grid(row=r, column=0, sticky=EW, pady=_pady)
     Label(root, textvariable=string_var,
           background=bg, foreground='white', anchor=E)\
-        .grid(row=r, column=1, sticky=E)
+        .grid(row=r, column=1, sticky=E, pady=_pady)
 
 
-def create_info_button_stretched(root, btn_label_text, btn_func, label_text, bg, r):
+def create_info_button_stretched(root, btn_label_text, btn_func, label_text, bg, r, _pady=0):
     Label(root, text=label_text,
           background=bg, foreground='white', anchor=W)\
-        .grid(row=r, column=0, sticky=EW)
+        .grid(row=r, column=0, sticky=EW, pady=_pady)
     Button(root, text=btn_label_text, command=btn_func, anchor=E)\
-        .grid(row=r, column=1, sticky=E)
+        .grid(row=r, column=1, sticky=E, pady=_pady)
 
 
 def create_checkbox(root, var, label_text, bg, on_value, _anchor=W):

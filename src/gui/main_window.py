@@ -59,7 +59,7 @@ class MainWindow:
                               borderwidth=10, width=300)
         left_frame.pack(side=LEFT, fill=BOTH)
         left_frame.pack_propagate(0)
-        query_frame = Frame(left_frame, bg=bg_color, height=220)
+        query_frame = Frame(left_frame, bg=bg_color, height=155)
         query_frame.pack(fill=BOTH, pady=(0, 5))
         query_frame.pack_propagate(0)
         summary_frame = Frame(left_frame, bg=bg_color)

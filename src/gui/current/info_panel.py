@@ -391,7 +391,6 @@ class InfoPanel:
     def supply_body_info(self, body_df_row):
         body_df_row = body_df_row.astype(str)
         self.focus_body_name = str(body_df_row['des'])
-        print(body_df_row)
 
         self.details.pack()
 

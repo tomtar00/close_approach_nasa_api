@@ -12,13 +12,13 @@ class StatQuery():
         self.frame.pack(expand=True, fill=BOTH)
         self.t = None
 
-        Button(self.frame, text='Download data', command=self.download_data).pack(side=BOTTOM, pady=10)
+        Button(self.frame, text='Download data', command=self.download_data).pack(side=BOTTOM, pady=5)
 
         query_frame = Frame(self.frame, bg=bg_color)
         query_frame.pack()
 
         Label(query_frame, text='Min date:', bg=bg_color, fg='white').grid(row=0, column=0, pady=5)
-        self.min_entry = DateEntry(query_frame, width=30, year=2021, locale='en_US', date_pattern='yyyy-MM-dd')
+        self.min_entry = DateEntry(query_frame, width=30, year=2022, locale='en_US', date_pattern='yyyy-MM-dd')
         self.min_entry.grid(row=0, column=1, pady=5)
 
         Label(query_frame, text='Max date:', bg=bg_color, fg='white').grid(row=1, column=0, pady=5)
@@ -43,10 +43,9 @@ class StatQuery():
             max_date = self.max_entry.get_date().strftime('%Y-%m-%d')
             self.df_view.show_loading()
             self.df = au.getDataFromApi(min_date, max_date, self.planet_name.get())
-            self.summary.handle_data_downloaded()  
+            self.summary.handle_data_downloaded()        
             if self.df is not None:
                 self.df_view.dataframe_to_treeview(self.df)
-            self.t = None
         except Exception as e:
             self.df_view.clear_treeview()
             self.df_view.show_no_result()
@@ -56,6 +55,8 @@ class StatQuery():
             #print(traceback.format_exc())
             print('Reason: ', e)
             print('------------------------------------>')
+        
+        self.t = None
 
     def download_data(self):
         if self.t is None:
