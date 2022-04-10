@@ -1,12 +1,8 @@
 from tkinter import *
-from tkinter import ttk
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-
-# from keras.models import Sequential
-# from keras.layers import Dense
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -139,20 +135,7 @@ class ModelTrainer():
             self.classifier = self.get_chosen_model()
 
             self.classifier.fit(self.X_train, self.y_train)
-            self.y_pred = self.classifier.predict(self.X_test)
-
-            # dl_model = Sequential()
-            # dl_model.add(Dense(20, activation='relu', input_shape=X_train.shape))
-            # dl_model.add(Dense(50, activation='relu'))
-            # dl_model.add(Dense(50, activation='relu'))
-            # dl_model.add(Dense(1, activation='sigmoid'))
-
-            # dl_model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-
-            # dl_model_history = dl_model.fit(X_train, y_train, epochs = 50, validation_split = 0.1)
-
-            # dl_model_preds = dl_model.predict(X_test)
-            # print(classification_report(y_test,dl_model_preds.round()))
+            self.y_pred = self.classifier.predict(self.X_test)                                          
 
             def to_prec(x): return f"{round(x*100, 2)} %"
 

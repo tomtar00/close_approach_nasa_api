@@ -1,16 +1,14 @@
 from tkinter import *
 from tkinter import ttk
-from turtle import width
 
-
-def create_info_label(root, string_var, label_text, bg, r, label_width=30):
+def create_info_label(root, string_var, label_text, bg, r, label_width=30, _pady=0):
     string_var.set("")
     Label(root, text=label_text,
           background=bg, foreground='white', width=label_width, anchor=NW)\
-        .grid(row=r, column=0, sticky=NW)
+        .grid(row=r, column=0, sticky=NW, pady=_pady)
     Label(root, textvariable=string_var,
           background=bg, foreground='white')\
-        .grid(row=r, column=1, sticky=NW)
+        .grid(row=r, column=1, sticky=NW, pady=_pady)
 
 
 def create_info_label_stretched(root, string_var, label_text, bg, r, _pady=0):

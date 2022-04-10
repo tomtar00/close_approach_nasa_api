@@ -36,10 +36,14 @@ class ModelTester():
         self.result_frame.grid(row=0, column=1, sticky=(E, W))
         self.classText = StringVar()
         wf.create_info_label(self.result_frame, self.classText,
-                             'Class:', bg_color, r=0, label_width=10)
+                             'Predicted class:', bg_color, r=0, label_width=15)
         self.confidenceText = StringVar()
         wf.create_info_label(self.result_frame, self.confidenceText,
                              'Confidence:', bg_color, r=1, label_width=10)
+
+        self.trueClassText = StringVar()
+        wf.create_info_label(self.result_frame, self.trueClassText,
+                             'True class:', bg_color, r=2, label_width=15, _pady=5)
 
     def predict_object_hazardous(self, elements_array):
         try:
@@ -57,14 +61,17 @@ class ModelTester():
         try:
             obj_name = self.des_var.get()
             elements = []
-            orbit_json = au.get_json_from_url(
-                    f'https://ssd-api.jpl.nasa.gov/sbdb.api?des={obj_name}&full-prec=true')['orbit']
+            json = au.get_json_from_url(
+                    f'https://ssd-api.jpl.nasa.gov/sbdb.api?des={obj_name}&full-prec=true')
+            orbit_json = json['orbit']
+            pha = json['object']['pha']
 
             elem_idx = self.sampler.get_query_params_indexes()
             for idx in elem_idx:
                 elements.append(float(orbit_json['elements'][idx]['value']))
 
             self.predict_object_hazardous(elements)
+            self.trueClassText.set('pha' if pha else 'non-pha')
         except Exception as e:
             print('Failed to download object. Reason: ', e)
             sys.print_traceback()

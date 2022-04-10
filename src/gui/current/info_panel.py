@@ -1,7 +1,6 @@
 from datetime import datetime
 from math import pi
 from tkinter import *
-from turtle import radians
 from numpy import cos, sin, sqrt, linspace
 from gui.current import bodies_list as bl
 import pandas as pd
