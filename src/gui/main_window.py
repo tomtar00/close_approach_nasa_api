@@ -14,7 +14,7 @@ class MainWindow:
     def __init__(self, name):
         window = Tk()
         window.title(name)
-        window.geometry('960x620')
+        window.geometry('960x800')
         window.configure(background=bg_color)
         window.columnconfigure(0, weight=1)
         window.rowconfigure((1, 2, 3, 4, 5), weight=1, uniform='row')
