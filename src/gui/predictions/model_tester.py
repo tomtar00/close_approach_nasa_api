@@ -28,9 +28,9 @@ class ModelTester():
         self.des_var = StringVar()
         self.des_var.set('433')
         wf.create_info_label_entry(self.pred_frame, self.des_var,
-                                   'Object designation', bg_color, r=0, entry_width=30, _pady=(0, 10))
+                                   'Object designation', bg_color, r=0, entry_width=30, _pady=(0, 10), _padx=(0, 20))
 
-        Button(self.pred_frame, text="Predict", command=self.download_object).grid()
+        Button(self.pred_frame, text="Predict", command=self.download_object, width=10).grid(sticky=W, pady=10)
 
         self.result_frame = Frame(self.frame, bg=bg_color)
         self.result_frame.grid(row=0, column=1, sticky=(E, W))

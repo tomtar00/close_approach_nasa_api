@@ -21,7 +21,7 @@ class StatSummary():
 
         self.minDstText = StringVar()
         wf.create_info_button_stretched(root=self.frame, btn_label_text='Hexbin',
-                                        btn_func=self.hexbin, label_text='Show hexbin:', bg=bg_color, r=1, _pady=space)
+                                        btn_func=self.hexbin, label_text='Show Hexbin:', bg=bg_color, r=1, _pady=space)
 
         self.minDstText = StringVar()
         wf.create_info_label_stretched(
@@ -56,25 +56,24 @@ class StatSummary():
         self.meanMagText = StringVar()
         wf.create_info_label_stretched(
             root=self.frame, string_var=self.meanMagText, label_text='Mean magnitude:', bg=bg_color, r=12)
-        self.meanMagText = StringVar()
+
         wf.create_info_button_stretched(root=self.frame, btn_label_text='Interval',
                                         btn_func=self.showIntervalFrame, label_text='Show interval:', bg=bg_color, r=13, _pady=(0,space))
-        self.meanMagText = StringVar()
+
         self.cls = StringVar()
         self.cls.set('4')
-        wf.create_info_label_entry(root=self.frame, entry_var=self.cls, label_text='Hierarchy count:', bg=bg_color, r=14, entry_width=30, _pady=(0, space))
-        self.meanMagText = StringVar()
+        wf.create_info_label_entry(root=self.frame, entry_var=self.cls, label_text='Hierarchy count:', bg=bg_color, r=14, entry_width=15, _pady=(0, space))
         wf.create_info_button_stretched(root=self.frame, btn_label_text='Hierarchy',
                                         btn_func=self.showHierarchy, label_text='Show hierarchy:', bg=bg_color, r=15, _pady=(0,space))
 
 
         self.xValue = StringVar()
         self.xValue.set('dist')
-        wf.create_info_label_entry(root=self.frame, entry_var=self.xValue, label_text='x label:', bg=bg_color, r=16, entry_width=30, _pady=(30, space))
+        wf.create_info_label_entry(root=self.frame, entry_var=self.xValue, label_text='x label:', bg=bg_color, r=16, entry_width=15, _pady=(20, space))
 
         self.yValue = StringVar()
         self.yValue.set('h')
-        wf.create_info_label_entry(root=self.frame, entry_var=self.yValue, label_text='y label:', bg=bg_color, r=17, entry_width=30, _pady=(0, space))
+        wf.create_info_label_entry(root=self.frame, entry_var=self.yValue, label_text='y label:', bg=bg_color, r=17, entry_width=15, _pady=(0, space))
                                         
 
         
@@ -141,7 +140,7 @@ class StatSummary():
         else:
             print('Dataframe is null')
 
-    def countAmmountFrame(self,dataFrame,size='7D'):
+    def countAmountFrame(self,dataFrame,size='7D'):
         dataFrame = dataFrame.set_index("cd")
         frame = dataFrame.resample(size).count()
 
@@ -150,7 +149,7 @@ class StatSummary():
         df = pd.DataFrame(returnFrame)
         df = df.reset_index(level=0)
         df.index += 1
-        df.columns = ['interval','ammount']
+        df.columns = ['interval','amount']
 
         df['interval'] = df['interval'].dt.date
 
@@ -159,8 +158,8 @@ class StatSummary():
 
     def showIntervalFrame(self):
         if hasattr(self.query, 'df'):
-            intervalFrame = self.countAmmountFrame(self.query.df)
-            intervalFrame.plot.bar(x="interval",y="ammount")
+            intervalFrame = self.countAmountFrame(self.query.df)
+            intervalFrame.plot.bar(x="interval",y="amount")
             plt.show()
         else:
             print('Dataframe is null')

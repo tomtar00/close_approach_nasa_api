@@ -45,14 +45,14 @@ class ModelTrainer():
         self.noise_var = IntVar()
         self.noise_var.set(-1)
         wf.create_checkbox_grid(self.train_frame, self.noise_var,
-                                'Generate noise to reduce imbalance', bg_color, 1, 1, W, 2, _pady=(10, 0))
+                                'Generate noise to reduce imbalance', bg_color, 1, 1, W, 2, _pady=(20, 0))
         self.noise_mag_var = StringVar()
         self.noise_mag_var.set('0.05')
         wf.create_info_label_entry(self.train_frame, self.noise_mag_var,
-                                   'Noise magnitude', bg_color, r=2, entry_width=30, _pady=(0, 10))
+                                   'Noise magnitude', bg_color, r=2, entry_width=30, _pady=(0, 20), entry_sticky=W)
 
         Button(self.train_frame, text='Train',
-               command=self.start_train_thread, width=10).grid(row=3, column=0, pady=20)
+               command=self.start_train_thread, width=10).grid(row=3, column=0, pady=20, sticky=W)
         self.training_label = Label(self.train_frame, text='Training...', bg=bg_color, fg='white')
         self.training_label.grid_forget()
 
@@ -150,9 +150,9 @@ class ModelTrainer():
         except Exception as e:
             print(f'Failed to train model. Reason: {e}')
             sys.print_traceback()
-        else:
-            self.training_label.grid_forget()
-            self.t = None
+        
+        self.training_label.grid_forget()
+        self.t = None
 
     def start_train_thread(self):
         if self.t is None:
