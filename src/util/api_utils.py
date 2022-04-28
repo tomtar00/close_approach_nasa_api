@@ -3,8 +3,6 @@ import requests
 import urllib.parse
 import pandas as pd
 
-api_key = '6t4LffN3Hom6Z0NdediRtQpdFpfQnegzY2PpYyqt'
-
 def get_json_from_url(url):
     response = requests.get(url)
     if(response.status_code != requests.codes.ok):
